@@ -63,6 +63,34 @@ class HtmlParser(object):
         return apps
 
     # 获取应用详情信息
-    def get_details(self,url):
-        html_content = html_downloader.HtmlDownloader(url)
+    @staticmethod
+    def get_details(url, app):
+        html_content = html_downloader.HtmlDownloader().download(url)
         soup = BeautifulSoup(html_content, 'html.parser', from_encoding='utf-8')
+        appabout = soup.find('div', class_='appabout')
+        lables = appabout.find('em').find_all('a')
+        for i in lables:
+            app.lable.append(i.get_text())
+        ppp = appabout.find_all('p')
+        for i in range(0, len(ppp)):
+            if i == 0 or i == 1:
+                continue
+            else:
+                text = ppp[i].find('em').get_text()
+                if text == "大小：":
+                    app.size = text
+                elif text == '类别：':
+                    app.apptype = text
+                elif text == '版本：':
+                    app.version = text
+                elif text == '浏览次数：':
+                    app.hot = int(text)
+                elif text == '页面最后更新时间：':
+                    app.lastupdatetime = text
+        appinfo = soup.find('div', class_='appinfo')
+        description = appinfo.find('div', id='desc').get_text()
+        lis = description.split('\n')
+        print(len(lis))
+
+
+

@@ -1,7 +1,9 @@
+
 import html_downloader
 import html_outputer
 import html_parser
 import url_manager
+from app import app
 
 
 class SpiderMain(object):
@@ -46,4 +48,6 @@ if __name__ == "__main__":
     root_url = "http://baike.baidu.com/item/Python"
     obj_spider = SpiderMain()
     # obj_spider.craw(root_url)
-    obj_spider.test("http://www.muzisoft.com/game/")
+    # obj_spider.test("http://www.muzisoft.com/game/")
+    item = app()
+    html_parser.HtmlParser.get_details('http://www.muzisoft.com/soft/330819.html', item)
