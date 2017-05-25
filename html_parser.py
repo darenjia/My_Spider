@@ -5,10 +5,11 @@ import urllib.parse
 from bs4 import BeautifulSoup
 
 import html_downloader
-from app import app
+from app import app, AppSpecial
 
 
 class HtmlParser(object):
+    URL = 'http://www.muzisoft.com'
     def parse(self, page_url, html_cont):
         if page_url is None or html_cont is None:
             return
@@ -42,29 +43,37 @@ class HtmlParser(object):
     # 获取推荐
     def get_first_page(self, html_cont):
         soup = BeautifulSoup(html_cont, 'html.parser', from_encoding='utf-8')
-        lis = list()
         apps = list()
         box_node = soup.find('div', id="appbox")
         title = box_node.find_all('b')
         app_type = box_node.find_all('ul')
-        print(len(app_type))
         for i in range(0, len(app_type)):
             li = app_type[i].find_all('li')
-            print(len(li))
             soft = li[0].find_all('a')
             img = li[0].find_all('img')
             for y in range(0, len(soft)):
                 item = app()
                 item.src = soft[y]['href']
+                self.get_details(HtmlParser.URL+item.src, item)
                 item.name = soft[y].get_text()
                 item.imgsrc = img[y]['src']
                 item.apptype = title[i].get_text()
                 apps.append(item)
+        appshow = soup.find('div', id='appshow')
+        lis = appshow.find_all('li')
+        for li in lis:
+            item = AppSpecial()
+            item.src = li.find('a')['href']
+            item.iconSrc = li.find('img')['src']
+            item.name = li.get_text()
+            self.get_special_details(HtmlParser.URL+item.src, item)
         return apps
 
+    def getcontent(self, con):
+        return con.split("：")[1]
+
     # 获取应用详情信息
-    @staticmethod
-    def get_details(url, app):
+    def get_details(self, url, app):
         html_content = html_downloader.HtmlDownloader().download(url)
         soup = BeautifulSoup(html_content, 'html.parser', from_encoding='utf-8')
         appabout = soup.find('div', class_='appabout')
@@ -73,24 +82,45 @@ class HtmlParser(object):
             app.lable.append(i.get_text())
         ppp = appabout.find_all('p')
         for i in range(0, len(ppp)):
-            if i == 0 or i == 1:
-                continue
-            else:
-                text = ppp[i].find('em').get_text()
-                if text == "大小：":
-                    app.size = text
-                elif text == '类别：':
-                    app.apptype = text
-                elif text == '版本：':
-                    app.version = text
-                elif text == '浏览次数：':
-                    app.hot = int(text)
-                elif text == '页面最后更新时间：':
-                    app.lastupdatetime = text
+            text = ppp[i].find('em').get_text()
+            if text == "大小：":
+                app.size = self.getcontent(ppp[i].get_text())
+            elif text == '类别：':
+                app.apptype = self.getcontent(ppp[i].get_text())
+            elif text == '版本：':
+                app.version = self.getcontent(ppp[i].get_text())
+            elif text == '浏览次数：':
+                app.hot = int(self.getcontent(ppp[i].get_text()))
+            elif text == '页面最后更新时间：':
+                app.lastupdatetime = self.getcontent(ppp[i].get_text())
         appinfo = soup.find('div', class_='appinfo')
         description = appinfo.find('div', id='desc').get_text()
+        description = description.replace('\t', '').replace('\r', '')
         lis = description.split('\n')
-        print(len(lis))
+        for i in lis:
+            if len(i) > 0:
+                app.desc.append(i)
+        imgsli = appinfo.find('div', id='showcase').find('div', class_='scrollbar').find('ul').find_all('li')
+        for li in imgsli:
+            imgpath = li.find('img')['src']
+            app.screenshot.append(imgpath)
+
+    # 获取专题详情信息
+    def get_special_details(self, url, app):
+        html_content = html_downloader.HtmlDownloader().download(url)
+        soup = BeautifulSoup(html_content, 'html.parser', from_encoding='utf-8')
+        appdata = soup.find('div', class_='tagdata')
+        app.desc = appdata.find('ul').find('p').get_text()
+        applist = soup.find('div', class_='list').find_all('li')
+        for apl in applist:
+            item = app()
+            item.src = apl.find('a')['href']
+            self.get_details(HtmlParser.URL + item.src, item)
+            item.name = apl.find('a').get_text()
+            item.imgsrc = apl.find('img')['src']
+            app.appList.append(item)
+
+
 
 
 

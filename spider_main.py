@@ -40,14 +40,12 @@ class SpiderMain(object):
     def test(self,url):
         html_cont = self.downloader.download(url)
         div = self.parser.get_first_page(html_cont)
-        for app in div:
-            print(app.printf())
+
 
 
 if __name__ == "__main__":
     root_url = "http://baike.baidu.com/item/Python"
     obj_spider = SpiderMain()
     # obj_spider.craw(root_url)
-    # obj_spider.test("http://www.muzisoft.com/game/")
-    item = app()
-    html_parser.HtmlParser.get_details('http://www.muzisoft.com/soft/330819.html', item)
+    obj_spider.test("http://www.muzisoft.com/game/")
+
